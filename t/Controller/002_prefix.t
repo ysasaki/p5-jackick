@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use Test::More;
 
-subtest 'user' => sub {
+subtest 'prefix defined' => sub {
     my $prefix;
     {
 
@@ -16,7 +16,7 @@ subtest 'user' => sub {
     is $prefix, '/user', 'prefix set';
 };
 
-subtest 'game' => sub {
+subtest 'prefix not deifned' => sub {
     my $prefix;
     {
 
@@ -27,5 +27,18 @@ subtest 'game' => sub {
     }
 
     is $prefix, '', 'prefix is empty string';
+};
+
+subtest 'only path' => sub {
+    my $prefix;
+    {
+
+        package MyApp::Web::Game;
+        use Koashi::Controller;
+
+        $prefix = Koashi::Controller::_add_prefix('/upload');
+    }
+
+    is $prefix, '/upload', 'only use path info';
 };
 done_testing;

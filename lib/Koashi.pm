@@ -1,16 +1,39 @@
 package Koashi;
 use strict;
 use warnings;
+use Module::Pluggable::Object;
+use Koashi::Dispatcher;
 our $VERSION = '0.01';
 
 sub new {
     my $class = shift;
-    bless {}, $class;
+    my %args  = (
+        search_path => [],
+        @_,
+    );
+    my $self = bless \%args, $class;
+    $self->_load_classes;
+    $self;
+}
+
+sub _load_classes {
+    my $self = shift;
+
+    # just load
+    my $finder = Module::Pluggable::Object->new(
+        search_path => $self->{search_path},
+        require     => 1,
+    );
+    my @plugins = $finder->plugins;
 }
 
 sub to_psgi {
+    my $self       = shift;
+    my $dispatcher = Koashi::Dispatcher->new;
     return sub {
-
+        my $env      = shift;
+        my $response = $dispatcher->dispatch($env);
+        return $response->finalize;
     };
 }
 
