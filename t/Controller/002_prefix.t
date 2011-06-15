@@ -10,7 +10,7 @@ subtest 'prefix defined' => sub {
         use Koashi::Controller;
 
         prefix '/user';
-        $prefix = Koashi::Controller::_add_prefix('');
+        $prefix = Koashi::Controller::_add_prefix( __PACKAGE__, '' );
     }
 
     is $prefix, '/user', 'prefix set';
@@ -23,7 +23,7 @@ subtest 'prefix not deifned' => sub {
         package MyApp::Web::Game;
         use Koashi::Controller;
 
-        $prefix = Koashi::Controller::_add_prefix('');
+        $prefix = Koashi::Controller::_add_prefix( __PACKAGE__, '' );
     }
 
     is $prefix, '', 'prefix is empty string';
@@ -36,7 +36,7 @@ subtest 'only path' => sub {
         package MyApp::Web::Game;
         use Koashi::Controller;
 
-        $prefix = Koashi::Controller::_add_prefix('/upload');
+        $prefix = Koashi::Controller::_add_prefix( __PACKAGE__, '/upload' );
     }
 
     is $prefix, '/upload', 'only use path info';

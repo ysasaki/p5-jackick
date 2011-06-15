@@ -3,7 +3,6 @@ package Koashi::Controller;
 use strict;
 use warnings;
 use parent 'Exporter';
-use Carp;
 use Router::Simple;
 use HTML::Shakan ();    # for loading HTML::Shakan::Fields::*
 use HTML::Shakan::Fields;
@@ -30,13 +29,46 @@ my $ROUTER = Router::Simple->new();
 sub router {$ROUTER}
 
 #===============================================================================
-my %FORM;
-sub former {\%FORM}
+my %FORM_DEFINITION;
+sub former { \%FORM_DEFINITION }
 
 sub form {
     my $pkg = caller(0);
     my ( $pattern, $data ) = @_;
-    $FORM{$pkg}->{$pattern} = $data;
+    $FORM_DEFINITION{$pkg}->{$pattern} = $data;
+}
+
+my %FORM_ROUTE;
+
+sub build_route_from_form {
+    my $class = shift;
+    for my $pkg ( keys %FORM_ROUTE ) {
+        my $in_pkg = delete $FORM_ROUTE{$pkg};
+        my @route_info;
+        for my $pattern ( keys %$in_pkg ) {
+            my ( $path, $args, $opts ) = @{ $in_pkg->{$pattern} };
+            debugf(
+                'define method: [%s] %s:[%s] in %s',
+                $opts->{method} ? join( ',', sort @{ $opts->{method} } ) : '',
+                $path,
+                join( ',', sort keys %{ $args->{code} } ),
+                $pkg
+            );
+
+            $route_info[0] ||= $path;
+            if ( $route_info[1] ) {
+                $route_info[1]->{code}
+                    = { %{ $route_info[1]->{code} }, %{ $args->{code} } };
+                $route_info[1]->{pattern} ||= $args->{pattern};
+                $route_info[1]->{pkg}     ||= $args->{pkg};
+            }
+            else {
+                $route_info[1] = $args;
+            }
+            $route_info[2] ||= $opts;
+        }
+        $ROUTER->connect(@route_info);
+    }
 }
 
 #===============================================================================
@@ -48,8 +80,7 @@ sub prefix {
 }
 
 sub _add_prefix {
-    my $pkg    = caller(0);
-    my $path   = shift;
+    my ( $pkg, $path ) = @_;
     my $prefix = $PREFIX{$pkg};
     return sprintf '%s%s', $prefix || '', $path || '';
 }
@@ -84,76 +115,80 @@ sub default(&) {
 # any [qw/get post delete/] => '/bye' => sub { ... };
 # any '/bye' => sub { ... };
 sub any($$;$) {
+    my $pkg = caller(0);
     if ( @_ == 3 ) {
         my ( $methods, $pattern, $code ) = @_;
-        debugf( 'define method: any %s method:%s',
-            $pattern, join ',', map { uc $_ } @$methods );
-        _connect( $pattern, $code,
+        _connect( $pkg, $pattern, $code,
             { method => [ map { uc $_ } @$methods ] } );
     }
     else {
         my ( $pattern, $code ) = @_;
-        debugf( 'define method: any %s', $pattern );
-        _connect( $pattern, $code );
+        _connect( $pkg, $pattern, $code );
     }
 }
 
 sub get {
+    my $pkg = caller(0);
     my ( $pattern, $code ) = @_;
-    debugf( 'define method: get %s', $pattern );
-    _connect( $pattern, $code, { method => [ 'GET', 'HEAD' ] } );
+    _connect( $pkg, $pattern, $code, { method => [ 'GET', 'HEAD' ] } );
 }
 
 sub post {
+    my $pkg = caller(0);
     my ( $pattern, $code ) = @_;
-    debugf( 'define method: post %s', $pattern );
-    _connect( $pattern, $code, { method => ['POST'] } );
+    _connect( $pkg, $pattern, $code, { method => ['POST'] } );
 }
 
 sub _connect {
-    my $pkg = caller(0);
-    my ( $pattern, $code, $opts ) = @_;
-    my $path    = _add_prefix($pattern);
+    my ( $pkg, $pattern, $code, $opts ) = @_;
+    my $path = _add_prefix( $pkg, $pattern );
     my $reftype = ref $code;
     if ( $reftype && $reftype eq 'CODE' ) {
+        debugf(
+            'define method: [%s] %s',
+            join( ',',
+                ( exists $opts->{method} ? @{ $opts->{method} } : '' ) ),
+            $path
+        );
         $ROUTER->connect( $path, { code => $code }, $opts );
     }
     elsif ( blessed($code) && $code->isa('Koashi::Form::Entity') ) {
-        my $route = $ROUTER->match($path);
-        if ($route) {
-            my $codetype = ref $route->{code};
+        my $form = $FORM_ROUTE{$pkg}->{$pattern};
+        if ($form) {
+            my $_code    = $FORM_ROUTE{$pkg}->{$pattern}->[1]->{code};
+            my $codetype = ref $_code;
             if ( $codetype && $codetype eq 'HASH' ) {
-                if ( exists $route->{code}->{ $code->type } ) {
-                    croak
+                if ( exists $_code->{ $code->type } ) {
+                    croakf
                         sprintf(
                         "you tried to define %s:%s, but %s:%s is already defined",
                         $path, $code->type, $path, $code->type );
 
                 }
                 else {
-                    $route->{code}->{ $code->type } = $code->code;
+                    $_code->{ $code->type } = $code->code;
                 }
             }
             else {
-                croak
+                croakf
                     sprintf(
                     "you tried to define %s:%s, but %s is already defined",
                     $path, $code->type, $path );
             }
         }
         else {
-            $ROUTER->connect(
+            $FORM_ROUTE{$pkg}->{$pattern} = [
                 $path,
                 {   code    => { $code->type => $code->code },
                     pattern => $pattern,
                     pkg     => $pkg,
                 },
                 $opts
-            );
+            ];
         }
     }
     else {
-        croak
+        croakf
             "second argument must be coderef or object is-a Koashi::Form::Entity";
     }
 }

@@ -5,7 +5,7 @@ use Test::More;
 BEGIN { use_ok 'Koashi::Controller' }
 
 my @method = qw/any get post prefix submitted_and_valid submitted default
-    form router former
+    form router former build_route_from_form
     /;
 can_ok 'Koashi::Controller', @method;
 

@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use Module::Pluggable::Object;
 use Koashi::Dispatcher;
+use Koashi::Controller ();
 our $VERSION = '0.01';
 
 sub new {
@@ -25,6 +26,7 @@ sub _load_classes {
         require     => 1,
     );
     my @plugins = $finder->plugins;
+    Koashi::Controller->build_route_from_form;
 }
 
 sub to_psgi {

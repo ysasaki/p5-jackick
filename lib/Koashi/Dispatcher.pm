@@ -6,6 +6,8 @@ use Koashi::Controller ();
 use Koashi::Request;
 use Koashi::Response;
 use Log::Minimal;
+use Scalar::Util qw(blessed);
+use namespace::autoclean;
 
 sub new {
     my $class = shift;
@@ -22,8 +24,6 @@ sub dispatch {
     my $self = shift;
     my $env  = shift;
 
-    debugf( 'dispatch: %s', $env->{PATH_INFO} || $env );
-
     my $route = $self->router->match($env);
     my $response;
     if ($route) {
@@ -31,50 +31,113 @@ sub dispatch {
         my $code     = $route->{code};
         my $codetype = ref $code;
 
-        if ( $codetype && ref $codetype eq 'CODE' ) {
+        if ( $codetype && $codetype eq 'CODE' ) {
             $response = $route->{code}->( $request, $route );
         }
-        elsif ( $codetype && ref $codetype eq 'HASH' ) {
-            my $form = HTML::Shakan->new(
-                $self->former->{ $route->{pkg} }->{ $route->{pattern} } );
-
-            if ($form) {
-                if ( $form->submitted_and_valid ) {
-                    debugf( 'dispatch: %s:submitted_and_valid',
-                        $route->{pattern} );
-                    $response = $code->{submitted_and_valid}->{code}
-                        ->( $form, $request, $route );
-                }
-                elsif ( $form->submitted ) {
-                    debugf( 'dispatch: %s:submitted', $route->{pattern} );
-                    $response = $code->{submitted}->{code}
-                        ->( $form, $request, $route );
-                }
-                else {
-                    debugf( 'dispatch: %s:default', $route->{pattern} );
-                    $response
-                        = $code->{default}->{code}->( $request, $route );
-                }
-            }
-            else {
-                warnf( "form for %s does not find. use default code instead",
-                    $code->{pattern} );
-                $response
-                    = $code->{default}->{code}->( undef, $request, $route );
-            }
+        elsif ( $codetype && $codetype eq 'HASH' ) {
+            $response = $self->_dispatch_form( $request, $code, $route );
         }
         else {
-            debugf( 'dispatch: unknown codetype: %s',
+            debugf( 'dispatch failed: unknown codetype: %s',
                 $codetype || '__UNDEF__' );
-            $response = _r( 500, [], ['Internal Server Error'] );
+            $response = [ 404, [], ['Not Found'] ];
         }
-
     }
     else {
-        $response = _r( [ 404, [], ['Not Found'] ] );
+        $response = [ 404, [], ['Not Found'] ];
     }
+
+    if ( $response && blessed($response) && $response->isa('Plack::Response') )
+    {
+        return $response;
+    }
+    elsif ( $response && ref $response eq 'ARRAY' ) {
+        return $self->_make_response(@$response);
+    }
+    else {
+        croakff(
+            'response failed: request for %s %s did not return arrayref or object is-a Plack::Response. resposne: %s',
+            $env->{REQUEST_METHOD} || 'GET',
+            $env->{PATH_INFO} || $env,
+            ddf($response)
+        );
+    }
+}
+
+#===============================================================================
+sub _make_response {
+    my $self = shift;
+    Koashi::Response->new(@_);
+}
+
+sub _dispatch_form {
+    my $self = shift;
+    my ( $request, $code, $route ) = @_;
+    my $form_difinition
+        = $self->former->{ $route->{pkg} }->{ $route->{pattern} };
+
+    my $response;
+    if ($form_difinition) {
+        my $form = $self->_make_form( $request, $form_difinition );
+        if ( $form->submitted_and_valid ) {
+            $response
+                = $self->_exec( $code, 'submitted_and_valid', $form, $request,
+                $route );
+        }
+        elsif ( $form->submitted ) {
+            $response
+                = $self->_exec( $code, 'submitted', $form, $request, $route );
+        }
+        else {
+            $response
+                = $self->_exec( $code, 'default', undef, $request, $route );
+        }
+    }
+    else {
+        warnf(
+            "dispatch failed: %s's seem to be form, but form data did not find",
+            $route->{pattern}
+        );
+        debugf( 'form:%s',  ddf( $self->former ) );
+        debugf( 'route:%s', ddf($route) );
+        $response = $self->_make_response( 404, [], ['Not Found'] );
+    }
+
     return $response;
 }
 
-sub _r { Koashi::Response->new(@_) }
+sub _make_form {
+    my $self = shift;
+    my ( $request, $data ) = @_;
+    my $reftype = ref $data;
+
+    my %args;
+    if ( $reftype && $reftype eq 'ARRAY' ) {
+        %args = ( fields => $data, request => $request );
+    }
+    elsif ( $reftype && $reftype eq 'HASH' ) {
+        %args = ( %$data, request => $request );
+    }
+    else {
+        croakff( 'form failed: form definition is invalid: %s', ddf($data) );
+    }
+    return HTML::Shakan->new(%args);
+}
+
+sub _exec {
+    my $self = shift;
+    my ( $code, $type, $form, $request, $route ) = @_;
+    debugf( 'dispatch: %s:%s', $route->{pattern}, $type );
+
+    my $_code = $code->{$type};
+    if ( !$_code or ref $_code ne 'CODE' ) {
+        croakff( 'exec failed: %s:%s is not defined or not a code reference',
+            $route->{pattern}, $type );
+    }
+
+    my @args = $form ? ( $form, $request, $route ) : ( $request, $route );
+    return $_code->(@args);
+
+}
+
 1;
