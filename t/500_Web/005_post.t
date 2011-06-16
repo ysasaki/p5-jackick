@@ -10,7 +10,7 @@ use HTTP::Request::Common;
     use parent 'Koashi';
 
     package MyApp::C::Root;
-    use Koashi::Controller;
+    use Koashi::Web;
     use Test::More;
 
     post '/' => sub {

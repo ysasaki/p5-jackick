@@ -3,7 +3,8 @@ use strict;
 use warnings;
 use Module::Pluggable::Object;
 use Koashi::Dispatcher;
-use Koashi::Controller ();
+use Koashi::Web ();
+use Log::Minimal;
 our $VERSION = '0.01';
 
 sub new {
@@ -26,7 +27,21 @@ sub _load_classes {
         require     => 1,
     );
     my @plugins = $finder->plugins;
-    Koashi::Controller->build_route_from_form;
+    Koashi::Web->build_route_from_form;
+
+    if ( $ENV{PLACK_ENV} eq 'development' and $ENV{SHOW_KOASHI_ROUTE} ) {
+        my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst )
+            = localtime(time);
+        my $time = sprintf(
+            "%04d-%02d-%02dT%02d:%02d:%02d",
+            $year + 1900,
+            $mon + 1, $mday, $hour, $min, $sec
+        );
+        my $route_info = "$time [DEBUG] current route information\n";
+        $route_info .= Koashi::Web->router->as_string;
+        warn $route_info;
+    }
+
 }
 
 sub to_psgi {

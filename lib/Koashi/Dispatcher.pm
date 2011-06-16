@@ -2,7 +2,7 @@ package Koashi::Dispatcher;
 
 use strict;
 use warnings;
-use Koashi::Controller ();
+use Koashi::Web ();
 use Koashi::Request;
 use Koashi::Response;
 use Log::Minimal;
@@ -12,8 +12,8 @@ use namespace::autoclean;
 sub new {
     my $class = shift;
     bless {
-        router => Koashi::Controller->router,
-        former => Koashi::Controller->former,
+        router => Koashi::Web->router,
+        former => Koashi::Web->former,
     }, $class;
 }
 
@@ -131,12 +131,12 @@ sub _exec {
 
     my $_code = $code->{$type};
     if ( !$_code or ref $_code ne 'CODE' ) {
-        croakff( 'exec failed: %s:%s is not defined or not a code reference',
-            $route->{pattern}, $type );
+        $self->_make_response(404, [], ['Not Found']);
     }
-
-    my @args = $form ? ( $form, $request, $route ) : ( $request, $route );
-    return $_code->(@args);
+    else {
+        my @args = $form ? ( $form, $request, $route ) : ( $request, $route );
+        return $_code->(@args);
+    }
 
 }
 

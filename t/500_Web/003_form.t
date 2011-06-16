@@ -1,12 +1,12 @@
 use strict;
 use warnings;
 use Test::More;
-use Koashi::Controller;
+use Koashi::Web;
 
 subtest 'submitted_and_valid' => sub {
 
     package MyApp::C::Root;
-    use Koashi::Controller;
+    use Koashi::Web;
     use Test::More;
 
     prefix '';
@@ -14,7 +14,7 @@ subtest 'submitted_and_valid' => sub {
     my @fields = ( TextField( name => 'title', required => 1 ) );
     form '/save', \@fields;
 
-    my $form = Koashi::Controller->former;
+    my $form = Koashi::Web->former;
     is_deeply $form->{'MyApp::C::Root'}->{'/save'}, \@fields,
         'form data is saved';
 

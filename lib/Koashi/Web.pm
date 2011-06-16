@@ -1,12 +1,14 @@
-package Koashi::Controller;
+package Koashi::Web;
 
 use strict;
 use warnings;
 use parent 'Exporter';
+use Sub::Args;
 use Router::Simple;
 use HTML::Shakan ();    # for loading HTML::Shakan::Fields::*
 use HTML::Shakan::Fields;
 use Koashi::Form::Entity;
+use Koashi::Form::Router;
 use Scalar::Util qw(blessed);
 use Log::Minimal;
 use namespace::autoclean;
@@ -34,41 +36,14 @@ sub former { \%FORM_DEFINITION }
 
 sub form {
     my $pkg = caller(0);
-    my ( $pattern, $data ) = @_;
+    my ( $pattern, $data ) = args_pos( 1, 1 );
     $FORM_DEFINITION{$pkg}->{$pattern} = $data;
 }
 
-my %FORM_ROUTE;
+my $FORM_ROUTER = Koashi::Form::Router->new( router => $ROUTER );
 
 sub build_route_from_form {
-    my $class = shift;
-    for my $pkg ( keys %FORM_ROUTE ) {
-        my $in_pkg = delete $FORM_ROUTE{$pkg};
-        my @route_info;
-        for my $pattern ( keys %$in_pkg ) {
-            my ( $path, $args, $opts ) = @{ $in_pkg->{$pattern} };
-            debugf(
-                'define method: [%s] %s:[%s] in %s',
-                $opts->{method} ? join( ',', sort @{ $opts->{method} } ) : '',
-                $path,
-                join( ',', sort keys %{ $args->{code} } ),
-                $pkg
-            );
-
-            $route_info[0] ||= $path;
-            if ( $route_info[1] ) {
-                $route_info[1]->{code}
-                    = { %{ $route_info[1]->{code} }, %{ $args->{code} } };
-                $route_info[1]->{pattern} ||= $args->{pattern};
-                $route_info[1]->{pkg}     ||= $args->{pkg};
-            }
-            else {
-                $route_info[1] = $args;
-            }
-            $route_info[2] ||= $opts;
-        }
-        $ROUTER->connect(@route_info);
-    }
+    $FORM_ROUTER->build_route;
 }
 
 #===============================================================================
@@ -76,11 +51,11 @@ my %PREFIX;
 
 sub prefix {
     my $pkg = caller(0);
-    $PREFIX{$pkg} = shift;
+    ( $PREFIX{$pkg} ) = args_pos(1);
 }
 
 sub _add_prefix {
-    my ( $pkg, $path ) = @_;
+    my ( $pkg, $path ) = args_pos( 1, 1 );
     my $prefix = $PREFIX{$pkg};
     return sprintf '%s%s', $prefix || '', $path || '';
 }
@@ -129,13 +104,13 @@ sub any($$;$) {
 
 sub get {
     my $pkg = caller(0);
-    my ( $pattern, $code ) = @_;
+    my ( $pattern, $code ) = args_pos( 1, 1 );
     _connect( $pkg, $pattern, $code, { method => [ 'GET', 'HEAD' ] } );
 }
 
 sub post {
     my $pkg = caller(0);
-    my ( $pattern, $code ) = @_;
+    my ( $pattern, $code ) = args_pos( 1, 1 );
     _connect( $pkg, $pattern, $code, { method => ['POST'] } );
 }
 
@@ -153,39 +128,13 @@ sub _connect {
         $ROUTER->connect( $path, { code => $code }, $opts );
     }
     elsif ( blessed($code) && $code->isa('Koashi::Form::Entity') ) {
-        my $form = $FORM_ROUTE{$pkg}->{$pattern};
-        if ($form) {
-            my $_code    = $FORM_ROUTE{$pkg}->{$pattern}->[1]->{code};
-            my $codetype = ref $_code;
-            if ( $codetype && $codetype eq 'HASH' ) {
-                if ( exists $_code->{ $code->type } ) {
-                    croakf
-                        sprintf(
-                        "you tried to define %s:%s, but %s:%s is already defined",
-                        $path, $code->type, $path, $code->type );
-
-                }
-                else {
-                    $_code->{ $code->type } = $code->code;
-                }
-            }
-            else {
-                croakf
-                    sprintf(
-                    "you tried to define %s:%s, but %s is already defined",
-                    $path, $code->type, $path );
-            }
-        }
-        else {
-            $FORM_ROUTE{$pkg}->{$pattern} = [
-                $path,
-                {   code    => { $code->type => $code->code },
-                    pattern => $pattern,
-                    pkg     => $pkg,
-                },
-                $opts
-            ];
-        }
+        $FORM_ROUTER->add(
+            pkg     => $pkg,
+            pattern => $pattern,
+            opts    => $opts,
+            path    => $path,
+            entity  => $code,
+        );
     }
     else {
         croakf

@@ -1,32 +1,31 @@
-package MyApp::C::Root;
+package MyApp::Web::Root;
 
 use strict;
 use warnings;
-use Koashi::Controller;
+use Koashi::Web;
 
-prefix '';
+prefix '/';
 
-any '/' => sub {
+any '' => sub {
     [ 200, [ 'Content-Type', 'text/plain' ], ['Hello, Koashi!'] ];
 };
 
-form '/upload' => [ TextField( name => 'title', required => 1 ) ];
+form 'upload' => [ TextField( name => 'title', required => 1 ) ];
 
-post '/upload' => submitted_and_valid {
+post 'upload' => submitted_and_valid {
     my ( $form, $request, $route ) = @_;
 
     my $body = sprintf 'title => %s', $form->param('title');
     $request->response( 200, [ 'Content-Type', 'text/plain' ], [$body] );
 };
 
-post '/upload' => submitted {
+post 'upload' => submitted {
     my ( $form, $request, $route ) = @_;
-    my $body = 'title must be null';
+    my $body = 'title should not be null';
     $request->response( 200, [ 'Content-Type', 'text/plain' ], [$body] );
 };
 
-# does not work yet
-get '/upload' => default {
+get 'upload' => default {
     my ( $request, $route ) = @_;
     my $body = <<HTML;
 <!DOCTYPE HTML>
@@ -45,5 +44,9 @@ get '/upload' => default {
 HTML
 
     $request->response( 200, [ 'Content-Type', 'text/html; charset=utf-8' ], [$body] );
+};
+
+any 'version' => sub {
+    [ 200, [ 'Content-Type', 'text/plain' ], ['$Koashi::VERSION => ' . $Koashi::VERSION] ];
 };
 1;

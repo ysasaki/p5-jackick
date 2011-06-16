@@ -10,10 +10,10 @@ use HTTP::Request::Common;
     use parent 'Koashi';
 
     package MyApp::C::Root;
-    use Koashi::Controller;
+    use Koashi::Web;
     use Test::More;
 
-    any '/' => sub {
+    get '/' => sub {
         my ( $request, $route ) = @_;
         isa_ok $request, 'Koashi::Request';
         isa_ok $route,   'HASH';
@@ -28,7 +28,7 @@ use HTTP::Request::Common;
         ),
     ];
 
-    any '/home' => submitted_and_valid {
+    get '/home' => submitted_and_valid {
         ok 1, '/home:submitted_and_valid is called';
         my ( $form, $request, $route ) = @_;
         isa_ok $form,    'HTML::Shakan';
@@ -37,7 +37,7 @@ use HTTP::Request::Common;
         [200, ['Content-Type', 'text/plain'],['OK']];
     };
 
-    any '/home' => submitted {
+    get '/home' => submitted {
         ok 1, '/home:submitted is called';
         my ( $form, $request, $route ) = @_;
         isa_ok $form,    'HTML::Shakan';
@@ -46,7 +46,7 @@ use HTTP::Request::Common;
         [200, ['Content-Type', 'text/plain'],['OK']];
     };
 
-    any '/home' => default {
+    get '/home' => default {
         ok 1, '/home:default is called';
         my ( $request, $route ) = @_;
         isa_ok $request, 'Koashi::Request';
@@ -74,14 +74,12 @@ test_psgi $app, sub {
 
     subtest 'POST /' => sub {
         my $res = $cb->( POST '/' );
-        is $res->code, 200, 'code is 200';
-        is $res->content, "Hello, world!\n", 'content ok';
+        is $res->code, 404, 'code is 404';
     };
 
     subtest 'PUT /' => sub {
         my $res = $cb->( PUT '/' );
-        is $res->code, 200, 'code is 200';
-        is $res->content, "Hello, world!\n", 'content ok';
+        is $res->code, 404, 'code is 404';
     };
 
     subtest 'GET /not_found' => sub {
