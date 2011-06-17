@@ -9,6 +9,7 @@ requires 'HTML::Shakan'              => 0.07;
 requires 'Scalar::Util'              => 1.23;
 requires 'Module::Pluggable::Object' => 3.9;
 requires 'Log::Minimal'              => 0.08;
+requires 'Sub::Args'                 => 0.08;
 
 tests_recursive 't/';
 author_tests 'xt';
