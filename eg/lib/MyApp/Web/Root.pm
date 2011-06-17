@@ -2,12 +2,12 @@ package MyApp::Web::Root;
 
 use strict;
 use warnings;
-use Koashi::Web;
+use JacKick::Web;
 
 prefix '/';
 
 any '' => sub {
-    [ 200, [ 'Content-Type', 'text/plain' ], ['Hello, Koashi!'] ];
+    [ 200, [ 'Content-Type', 'text/plain' ], ['Hello, JacKick!'] ];
 };
 
 form 'upload' => [ TextField( name => 'title', required => 1 ) ];
@@ -47,6 +47,6 @@ HTML
 };
 
 any 'version' => sub {
-    [ 200, [ 'Content-Type', 'text/plain' ], ['$Koashi::VERSION => ' . $Koashi::VERSION] ];
+    [ 200, [ 'Content-Type', 'text/plain' ], ['$JacKick::VERSION => ' . $JacKick::VERSION] ];
 };
 1;

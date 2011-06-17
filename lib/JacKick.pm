@@ -1,11 +1,14 @@
-package Koashi;
+package JacKick;
+
+use 5.008008;
 use strict;
 use warnings;
 use Module::Pluggable::Object;
-use Koashi::Dispatcher;
-use Koashi::Web ();
+use JacKick::Dispatcher;
+use JacKick::Web ();
 use Log::Minimal;
-our $VERSION = '0.01';
+
+our $VERSION = '0.02';
 
 sub new {
     my $class = shift;
@@ -27,9 +30,12 @@ sub _load_classes {
         require     => 1,
     );
     my @plugins = $finder->plugins;
-    Koashi::Web->build_route_from_form;
+    JacKick::Web->build_route_from_form;
 
-    if ( $ENV{PLACK_ENV} eq 'development' and $ENV{SHOW_KOASHI_ROUTE} ) {
+    if (   $ENV{PLACK_ENV}
+        && $ENV{PLACK_ENV} eq 'development'
+        && $ENV{SHOW_KOASHI_ROUTE} )
+    {
         my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst )
             = localtime(time);
         my $time = sprintf(
@@ -38,7 +44,7 @@ sub _load_classes {
             $mon + 1, $mday, $hour, $min, $sec
         );
         my $route_info = "$time [DEBUG] current route information\n";
-        $route_info .= Koashi::Web->router->as_string;
+        $route_info .= JacKick::Web->router->as_string;
         warn $route_info;
     }
 
@@ -46,7 +52,7 @@ sub _load_classes {
 
 sub to_psgi {
     my $self       = shift;
-    my $dispatcher = Koashi::Dispatcher->new;
+    my $dispatcher = JacKick::Dispatcher->new;
     return sub {
         my $env      = shift;
         my $response = $dispatcher->dispatch($env);
@@ -59,15 +65,15 @@ __END__
 
 =head1 NAME
 
-Koashi -
+JacKick -
 
 =head1 SYNOPSIS
 
-  use Koashi;
+  use JacKick;
 
 =head1 DESCRIPTION
 
-Koashi is
+JacKick is
 
 =head1 AUTHOR
 

@@ -1,4 +1,7 @@
 Revision history for Perl extension Koashi
 
-0.01    Sat Jun 11 13:25:20 2011
+0.02    Fri Jun 17 19:17 2011
+        - renamed JacKick from Koashi
+
+0.01    Sat Jun 11 13:25 2011
         - original version

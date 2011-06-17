@@ -7,10 +7,10 @@ subtest 'prefix defined' => sub {
     {
 
         package MyApp::Web::User;
-        use Koashi::Web;
+        use JacKick::Web;
 
         prefix '/user';
-        $prefix = Koashi::Web::_add_prefix( __PACKAGE__, '' );
+        $prefix = JacKick::Web::_add_prefix( __PACKAGE__, '' );
     }
 
     is $prefix, '/user', 'prefix set';
@@ -21,9 +21,9 @@ subtest 'prefix not deifned' => sub {
     {
 
         package MyApp::Web::Game;
-        use Koashi::Web;
+        use JacKick::Web;
 
-        $prefix = Koashi::Web::_add_prefix( __PACKAGE__, '' );
+        $prefix = JacKick::Web::_add_prefix( __PACKAGE__, '' );
     }
 
     is $prefix, '', 'prefix is empty string';
@@ -34,9 +34,9 @@ subtest 'only path' => sub {
     {
 
         package MyApp::Web::Game;
-        use Koashi::Web;
+        use JacKick::Web;
 
-        $prefix = Koashi::Web::_add_prefix( __PACKAGE__, '/upload' );
+        $prefix = JacKick::Web::_add_prefix( __PACKAGE__, '/upload' );
     }
 
     is $prefix, '/upload', 'only use path info';

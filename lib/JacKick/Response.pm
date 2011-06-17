@@ -1,4 +1,4 @@
-package Koashi::Response;
+package JacKick::Response;
 
 use strict;
 use warnings;

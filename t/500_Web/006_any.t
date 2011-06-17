@@ -7,15 +7,15 @@ use HTTP::Request::Common;
 {
 
     package MyApp;
-    use parent 'Koashi';
+    use parent 'JacKick';
 
     package MyApp::C::Root;
-    use Koashi::Web;
+    use JacKick::Web;
     use Test::More;
 
     any '/' => sub {
         my ( $request, $route ) = @_;
-        isa_ok $request, 'Koashi::Request';
+        isa_ok $request, 'JacKick::Request';
         isa_ok $route,   'HASH';
         $request->response( 200, [ 'Content-Type', 'text/plain' ],
             ["Hello, world!\n"] );
@@ -32,7 +32,7 @@ use HTTP::Request::Common;
         ok 1, '/home:submitted_and_valid is called';
         my ( $form, $request, $route ) = @_;
         isa_ok $form,    'HTML::Shakan';
-        isa_ok $request, 'Koashi::Request';
+        isa_ok $request, 'JacKick::Request';
         isa_ok $route,   'HASH';
         [200, ['Content-Type', 'text/plain'],['OK']];
     };
@@ -41,7 +41,7 @@ use HTTP::Request::Common;
         ok 1, '/home:submitted is called';
         my ( $form, $request, $route ) = @_;
         isa_ok $form,    'HTML::Shakan';
-        isa_ok $request, 'Koashi::Request';
+        isa_ok $request, 'JacKick::Request';
         isa_ok $route,   'HASH';
         [200, ['Content-Type', 'text/plain'],['OK']];
     };
@@ -49,7 +49,7 @@ use HTTP::Request::Common;
     any '/home' => default {
         ok 1, '/home:default is called';
         my ( $request, $route ) = @_;
-        isa_ok $request, 'Koashi::Request';
+        isa_ok $request, 'JacKick::Request';
         isa_ok $route,   'HASH';
         [200, ['Content-Type', 'text/plain'],['OK']];
     };

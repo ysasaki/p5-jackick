@@ -1,12 +1,12 @@
 use strict;
 use warnings;
 use Test::More;
-use Koashi::Request;
+use JacKick::Request;
 
-my $req = Koashi::Request->new( +{} );
+my $req = JacKick::Request->new( +{} );
 
 my $res = $req->response( 404, [], ['Not Found'] );
-isa_ok $res, 'Koashi::Response';
+isa_ok $res, 'JacKick::Response';
 isa_ok $res, 'Plack::Response';
 
 done_testing;

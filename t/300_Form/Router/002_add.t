@@ -2,8 +2,8 @@ use strict;
 use warnings;
 use Test::More;
 use Router::Simple;
-use Koashi::Form::Router;
-use Koashi::Form::Entity;
+use JacKick::Form::Router;
+use JacKick::Form::Entity;
 use HTTP::Request::Common;
 use Plack::Test;
 
@@ -204,10 +204,10 @@ subtest 'any' => sub {
 
 done_testing;
 
-sub _fr { Koashi::Form::Router->new( router => Router::Simple->new ) }
+sub _fr { JacKick::Form::Router->new( router => Router::Simple->new ) }
 
 sub _e {
-    Koashi::Form::Entity->new(
+    JacKick::Form::Entity->new(
         type => shift,
         code => shift
     );

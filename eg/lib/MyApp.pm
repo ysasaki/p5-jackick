@@ -2,6 +2,6 @@ package MyApp;
 
 use strict;
 use warnings;
-use parent 'Koashi';
+use parent 'JacKick';
 
 1;

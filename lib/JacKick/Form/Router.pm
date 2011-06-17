@@ -1,11 +1,10 @@
-package Koashi::Form::Router;
+package JacKick::Form::Router;
 
 use strict;
 use warnings;
 use Sub::Args;
 use Log::Minimal;
-use Digest::MD5;
-use namespace::autoclean;
+use namespace::clean;
 
 sub new {
     my $class = shift;

@@ -1,9 +1,9 @@
 use strict;
 use warnings;
 use Test::More;
-use Koashi;
+use JacKick;
 
-my $app = Koashi->new->to_psgi;
+my $app = JacKick->new->to_psgi;
 isa_ok $app, 'CODE', 'to_psgi return coderef';
 
 done_testing;

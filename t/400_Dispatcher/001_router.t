@@ -1,9 +1,9 @@
 use strict;
 use warnings;
 use Test::More;
-use Koashi::Dispatcher;
+use JacKick::Dispatcher;
 
-my $dispatcher = Koashi::Dispatcher->new;
+my $dispatcher = JacKick::Dispatcher->new;
 eval {
     my $router = $dispatcher->router;
     ok 1, 'call router';

@@ -2,10 +2,10 @@ use strict;
 use warnings;
 use Test::More;
 use Router::Simple;
-use Koashi::Form::Router;
+use JacKick::Form::Router;
 
-my $obj = new_ok 'Koashi::Form::Router', [ router => Router::Simple->new() ];
-eval { Koashi::Form::Router->new(); };
+my $obj = new_ok 'JacKick::Form::Router', [ router => Router::Simple->new() ];
+eval { JacKick::Form::Router->new(); };
 ok $@, 'die if missing router';
 
 done_testing;

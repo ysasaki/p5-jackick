@@ -1,19 +1,20 @@
-package Koashi::Dispatcher;
+package JacKick::Dispatcher;
 
 use strict;
 use warnings;
-use Koashi::Web ();
-use Koashi::Request;
-use Koashi::Response;
+use JacKick::Web ();
+use JacKick::Request;
+use JacKick::Response;
+use Sub::Args;
 use Log::Minimal;
 use Scalar::Util qw(blessed);
-use namespace::autoclean;
+use namespace::clean;
 
 sub new {
     my $class = shift;
     bless {
-        router => Koashi::Web->router,
-        former => Koashi::Web->former,
+        router => JacKick::Web->router,
+        former => JacKick::Web->former,
     }, $class;
 }
 
@@ -22,12 +23,12 @@ sub former { $_[0]->{former} }
 
 sub dispatch {
     my $self = shift;
-    my $env  = shift;
+    my ($env) = args_pos(1);
 
     my $route = $self->router->match($env);
     my $response;
     if ($route) {
-        my $request  = Koashi::Request->new($env);
+        my $request  = JacKick::Request->new($env);
         my $code     = $route->{code};
         my $codetype = ref $code;
 
@@ -47,7 +48,9 @@ sub dispatch {
         $response = [ 404, [], ['Not Found'] ];
     }
 
-    if ( $response && blessed($response) && $response->isa('Plack::Response') )
+    if (   $response
+        && blessed($response)
+        && $response->isa('Plack::Response') )
     {
         return $response;
     }
@@ -67,7 +70,7 @@ sub dispatch {
 #===============================================================================
 sub _make_response {
     my $self = shift;
-    Koashi::Response->new(@_);
+    JacKick::Response->new(@_);
 }
 
 sub _dispatch_form {
@@ -131,7 +134,7 @@ sub _exec {
 
     my $_code = $code->{$type};
     if ( !$_code or ref $_code ne 'CODE' ) {
-        $self->_make_response(404, [], ['Not Found']);
+        $self->_make_response( 404, [], ['Not Found'] );
     }
     else {
         my @args = $form ? ( $form, $request, $route ) : ( $request, $route );

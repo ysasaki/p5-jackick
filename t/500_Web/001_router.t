@@ -7,9 +7,9 @@ my $router;
 {
 
     package MyApp::Web::Root;
-    use Koashi::Web;
+    use JacKick::Web;
 
-    $router = Koashi::Web->router;
+    $router = JacKick::Web->router;
 }
 isa_ok $router, 'Router::Simple', 'router ok';
 
@@ -17,9 +17,9 @@ my $router2;
 {
 
     package MyApp::Web::User;
-    use Koashi::Web;
+    use JacKick::Web;
 
-    $router2 = Koashi::Web->router;
+    $router2 = JacKick::Web->router;
 }
 is refaddr($router), refaddr($router2), 'refaddrs are same';
 

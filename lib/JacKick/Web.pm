@@ -1,4 +1,4 @@
-package Koashi::Web;
+package JacKick::Web;
 
 use strict;
 use warnings;
@@ -7,11 +7,11 @@ use Sub::Args;
 use Router::Simple;
 use HTML::Shakan ();    # for loading HTML::Shakan::Fields::*
 use HTML::Shakan::Fields;
-use Koashi::Form::Entity;
-use Koashi::Form::Router;
+use JacKick::Form::Entity;
+use JacKick::Form::Router;
 use Scalar::Util qw(blessed);
 use Log::Minimal;
-use namespace::autoclean;
+use namespace::clean;
 
 our @EXPORT = qw/
     prefix
@@ -40,7 +40,7 @@ sub form {
     $FORM_DEFINITION{$pkg}->{$pattern} = $data;
 }
 
-my $FORM_ROUTER = Koashi::Form::Router->new( router => $ROUTER );
+my $FORM_ROUTER = JacKick::Form::Router->new( router => $ROUTER );
 
 sub build_route_from_form {
     $FORM_ROUTER->build_route;
@@ -62,24 +62,24 @@ sub _add_prefix {
 
 #===============================================================================
 # post '/' => submitted_and_valid { # code block };
-sub submitted_and_valid(&) {
-    Koashi::Form::Entity->new(
+sub submitted_and_valid(&) { ## no critic
+    JacKick::Form::Entity->new(
         code => $_[0],
         type => 'submitted_and_valid'
     );
 }
 
 # post '/' => submitted { # code block };
-sub submitted(&) {
-    Koashi::Form::Entity->new(
+sub submitted(&) { ## no critic
+    JacKick::Form::Entity->new(
         code => $_[0],
         type => 'submitted'
     );
 }
 
 # post '/' => default { # code block };
-sub default(&) {
-    Koashi::Form::Entity->new(
+sub default(&) { ## no critic
+    JacKick::Form::Entity->new(
         code => $_[0],
         type => 'default',
     );
@@ -89,7 +89,7 @@ sub default(&) {
 # copy from Router::Simple::Sinatraish 0.02
 # any [qw/get post delete/] => '/bye' => sub { ... };
 # any '/bye' => sub { ... };
-sub any($$;$) {
+sub any($$;$) { ## no critic
     my $pkg = caller(0);
     if ( @_ == 3 ) {
         my ( $methods, $pattern, $code ) = @_;
@@ -127,7 +127,7 @@ sub _connect {
         );
         $ROUTER->connect( $path, { code => $code }, $opts );
     }
-    elsif ( blessed($code) && $code->isa('Koashi::Form::Entity') ) {
+    elsif ( blessed($code) && $code->isa('JacKick::Form::Entity') ) {
         $FORM_ROUTER->add(
             pkg     => $pkg,
             pattern => $pattern,
@@ -138,7 +138,7 @@ sub _connect {
     }
     else {
         croakf
-            "second argument must be coderef or object is-a Koashi::Form::Entity";
+            "second argument must be coderef or object is-a JacKick::Form::Entity";
     }
 }
 

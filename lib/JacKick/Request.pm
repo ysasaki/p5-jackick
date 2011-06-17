@@ -1,12 +1,12 @@
-package Koashi::Request;
+package JacKick::Request;
 
 use strict;
 use warnings;
 use parent 'Plack::Request';
-use Koashi::Response;
+use JacKick::Response;
 
 sub response {
     my $self = shift;
-    Koashi::Response->new(@_);
+    JacKick::Response->new(@_);
 }
 1;
